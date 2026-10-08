@@ -1,0 +1,213 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tablero de Devoluciones Control Interno 2026</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: encabezado, fila de cifras clave, grilla de indicadores por mes, tablas de responsables, hallazgos */
+:root{color-scheme:light}
+:root{
+  --bg:#f3f5f7; --panel:#ffffff; --fg:#14232e; --muted:#5b6b78; --line:#dde3e8;
+  --accent:#0b5e73; --accent-soft:#dcecf0;
+  --ok:#1f7a4d; --warn:#b26a00; --bad:#b3261e; --bad-soft:#f8e3e1; --ok-soft:#dff1e7; --warn-soft:#faecd2;
+  --bar:#0b5e73; --track:#e6ebef;
+  --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e171d; --panel:#16232b; --fg:#e6eef3; --muted:#93a5b2; --line:#26363f;
+  --accent:#5cc0d6; --accent-soft:#17353f; --ok:#5fcf97; --warn:#e8a94a; --bad:#ff8a80; --bad-soft:#3a1f1f; --ok-soft:#173326; --warn-soft:#3a2d14;
+  --bar:#5cc0d6; --track:#22323b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e171d; --panel:#16232b; --fg:#e6eef3; --muted:#93a5b2; --line:#26363f;
+  --accent:#5cc0d6; --accent-soft:#17353f; --ok:#5fcf97; --warn:#e8a94a; --bad:#ff8a80; --bad-soft:#3a1f1f; --ok-soft:#173326; --warn-soft:#3a2d14;
+  --bar:#5cc0d6; --track:#22323b; color-scheme:dark}
+html,body{margin:0}body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:24px 48px;display:flex;flex-direction:column;gap:24px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 24px;align-items:flex-end}
+h1{font-size:1.6rem;margin:0;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted);max-width:60ch}
+.stamp{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0 0 12px;font-weight:600}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.kpi b{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi span{color:var(--muted);font-size:.82rem}
+.kpi.bad b{color:var(--bad)} .kpi.ok b{color:var(--ok)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+.ind{display:grid;grid-template-columns:1fr;gap:14px}
+.ind-row{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,2fr) auto;gap:12px;align-items:center}
+@media(max-width:560px){.ind-row{grid-template-columns:1fr;gap:6px}}
+.ind-row .name{font-weight:500}
+.ind-row .name small{display:block;color:var(--muted);font-weight:400;font-size:.76rem}
+.months{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.m{display:flex;flex-direction:column;gap:3px;font-variant-numeric:tabular-nums;font-size:.76rem;color:var(--muted)}
+.m .val{color:var(--fg);font-weight:600;font-size:.88rem}
+.track{height:8px;background:var(--track);border-radius:4px;position:relative;overflow:visible}
+.fill{height:100%;border-radius:4px;background:var(--bar)}
+.fill.bad{background:var(--bad)} .fill.ok{background:var(--ok)}
+.meta{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--fg);opacity:.7}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.74rem;font-weight:600;white-space:nowrap}
+.pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+.legend{font-size:.76rem;color:var(--muted);margin-top:12px;display:flex;gap:6px;align-items:center}
+.legend i{width:2px;height:12px;background:var(--fg);opacity:.7;display:inline-block}
+/* stacked columns by month */
+.cols{display:flex;gap:18px;align-items:flex-end;height:190px;padding-top:8px}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;min-width:0}
+.stack{width:100%;max-width:70px;display:flex;flex-direction:column;justify-content:flex-end;border-radius:3px;overflow:hidden}
+.stack div{display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:600;color:#fff;font-variant-numeric:tabular-nums}
+.s-ok{background:var(--ok)} .s-bad{background:var(--bad)} .s-nd{background:var(--muted)}
+.col .lbl{font-size:.8rem;font-weight:500} .col .tot{font-size:.74rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.keys{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:.78rem;color:var(--muted)}
+.keys span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.k-ok::before{background:var(--ok)} .k-bad::before{background:var(--bad)} .k-nd::before{background:var(--muted)}
+/* tables */
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+.tabs{display:flex;gap:4px}
+.tabs button,.tools select,.tools input{font:inherit;font-size:.85rem;padding:6px 12px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:5px}
+.tabs button{cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--accent);color:var(--panel);border-color:var(--accent)}
+.tools input{flex:1;min-width:140px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.85rem;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;cursor:pointer;user-select:none}
+td.l{white-space:normal;color:var(--muted);font-size:.8rem}
+.pc{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.pc .track{width:70px}
+tr.total td{font-weight:700;background:var(--accent-soft)}
+.note{color:var(--muted);font-size:.8rem;margin-top:10px}
+.hall td.l.n{color:var(--fg);font-size:.85rem}
+</style></head><body>
+
+<div class="wrap">
+<header>
+  <div>
+    <h1>Tablero de devoluciones · Control interno 2026</h1>
+    <p>Salidas con devolución que quedaron bien documentadas: devolución en sistema, doble firma y foto. Unidad de medida: salida (N° de envío).</p>
+  </div>
+  <div class="stamp">Inicio del control con evidencia: 1 ago 2026<br>Datos al 8 oct 2026</div>
+</header>
+
+<section class="kpis" id="kpis"></section>
+
+<section class="grid2">
+  <div class="panel">
+    <h2>Cumplimiento por indicador y mes</h2>
+    <div class="ind" id="ind"></div>
+    <div class="legend"><i></i> Marca vertical = meta. Julio no tiene firma ni foto (sin evidencia).</div>
+  </div>
+  <div class="panel">
+    <h2>Salidas evaluadas: cumplen vs no cumplen</h2>
+    <div class="cols" id="cols"></div>
+    <div class="keys"><span class="k-ok">Cumple integral</span><span class="k-bad">No cumple</span><span class="k-nd">Sin evidencia (jul)</span></div>
+    <p class="note">Octubre solo tiene 3 salidas; su porcentaje cambia mucho con cada salida nueva.</p>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Quién debe corregir</h2>
+  <div class="tools">
+    <div class="tabs" role="group" aria-label="Vista">
+      <button id="tR" aria-pressed="true">Responsables de entrega</button>
+      <button id="tB" aria-pressed="false">Bodegueros</button>
+    </div>
+    <input id="q" type="search" placeholder="Buscar código" aria-label="Buscar código">
+    <select id="f" aria-label="Filtro"><option value="all">Todos</option><option value="bad">Con incumplimientos</option><option value="zero">0% de cumplimiento</option></select>
+  </div>
+  <div class="tbl"><table id="tb"></table></div>
+  <p class="note" id="tnote"></p>
+</section>
+
+<section class="grid2">
+  <div class="panel">
+    <h2>Hallazgos con impacto económico</h2>
+    <div class="kpis" style="margin-bottom:12px">
+      <div class="kpi"><b>11</b><span>Registrados</span></div>
+      <div class="kpi ok"><b>10</b><span>Cerrados</span></div>
+      <div class="kpi bad"><b>1</b><span>Abierto</span></div>
+      <div class="kpi"><b>Q3,643</b><span>Impacto total</span></div>
+      <div class="kpi"><b>9.6</b><span>Días promedio de solución</span></div>
+    </div>
+    <div class="tbl"><table class="hall">
+      <tr><th class="l">Tipo</th><th class="l">Responsable</th><th>Salida</th><th>Líneas</th><th>Impacto</th><th class="l">Estado</th></tr>
+      <tr><td class="l n">Devolución incorrecta</td><td class="l n">R-04</td><td>72651</td><td>7</td><td>Q3,335.50</td><td class="l"><span class="pill ok">Cerrado · 6 días</span></td></tr>
+      <tr><td class="l n">Mala asignación de unidad</td><td class="l n">R-10</td><td>72306</td><td>3</td><td>Q237.68</td><td class="l"><span class="pill ok">Cerrado · 18 días</span></td></tr>
+      <tr><td class="l n">Devolución no registrada</td><td class="l n">Sin asignar</td><td>–</td><td>1</td><td>Q70.00</td><td class="l"><span class="pill warn">Por completar</span></td></tr>
+    </table></div>
+    <p class="note">Una sola salida (72651) concentra el 92% del impacto: Q3,335.50 de Q3,643.18.</p>
+  </div>
+  <div class="panel">
+    <h2>Qué falla más</h2>
+    <div class="ind" id="falls"></div>
+    <p class="note">Desde el 1 de agosto, de 95 salidas evaluadas, 60 no cumplen. La foto falta en 59 de ellas; la doble firma en 17; el sistema en 8 (julio incluido).</p>
+  </div>
+</section>
+</div>
+
+<script>
+const META={sis:.95,fir:.95,fot:.95,int:.90};
+const IND=[
+ {n:'Devolución correcta en sistema',m:.95,v:[.837,1,1,1],acc:.944},
+ {n:'Doble firma completa',m:.95,v:[null,.651,.980,.667],acc:.821},
+ {n:'Foto de verificación',m:.95,v:[null,.256,.490,.333],acc:.379},
+ {n:'Cumplimiento integral',s:'sistema + firma + foto',m:.90,v:[null,.233,.490,.333],acc:.368}
+];
+const MES=['Jul','Ago','Sep','Oct'];
+const SAL=[ // [salidas, cumplen, no cumplen]
+ [62,0,0],[43,10,33],[49,24,25],[3,1,2]];
+const RESP=[["R-01",5,4,0,4,2,4,0],["R-02",5,4,0,4,0,4,1],["R-03",7,5,2,3,1,3,1],["R-04",8,4,1,3,0,3,0],["R-05",6,3,0,3,2,3,0],["R-06",5,5,3,2,0,2,0],["R-07",5,4,2,2,1,2,0],["R-08",5,4,2,2,2,2,0],["R-09",4,4,2,2,0,2,0],["R-10",5,4,2,2,0,2,0],["R-11",3,3,1,2,0,2,0],["R-12",4,3,1,2,0,2,0],["R-13",4,3,1,2,0,2,1],["R-14",3,3,1,2,0,2,0],["R-15",5,3,1,2,0,2,0],["R-16",6,2,0,2,2,2,0],["R-17",4,2,0,2,1,2,0],["R-18",2,2,0,2,1,2,0],["R-19",5,3,2,1,1,1,0],["R-20",3,2,1,1,0,1,0],["R-21",8,2,1,1,0,1,3],["R-22",2,2,1,1,1,0,0],["R-23",1,1,0,1,0,1,0],["R-24",1,1,0,1,0,1,0],["R-25",5,1,0,1,0,1,0],["R-26",2,1,0,1,0,1,0],["R-27",1,1,0,1,0,1,0],["R-28",3,1,0,1,1,1,1],["R-29",1,1,0,1,0,1,0],["R-30",1,1,0,1,1,1,0],["R-31",1,1,0,1,1,1,0],["R-32",1,1,0,1,0,1,0],["R-33",2,1,0,1,0,1,0],["R-34",1,1,0,1,0,1,0]];
+const BOD=[["B-01",143,84,30,54,16,53,6],["B-02",5,5,0,5,0,5,0],["B-03",7,6,5,1,1,1,0],["B-04",2,0,0,0,0,0,2]];
+const TOT={R:["TOTAL",157,95,35,60,17,59,8]};
+const pct=x=>x==null?'N/D':(x*100).toFixed(1).replace(/\.0$/,'')+'%';
+const st=(v,m)=>v>=m?'ok':(v>=m-.1?'warn':'bad');
+const $=id=>document.getElementById(id);
+
+// KPIs
+$('kpis').innerHTML=[
+ ['157','Salidas con devolución',''],['95','Salidas evaluadas (desde 1 ago)',''],
+ ['36.8%','Cumplimiento integral acumulado · meta 90%','bad'],['60','Salidas que no cumplen','bad'],
+ ['37.9%','Con foto · meta 95%','bad'],['82.1%','Con doble firma · meta 95%','bad']
+].map(k=>`<div class="kpi ${k[2]}"><b>${k[0]}</b><span>${k[1]}</span></div>`).join('');
+
+// Indicators
+$('ind').innerHTML=IND.map(i=>{
+  const cells=[1,2,3].map(j=>{const v=i.v[j];return `<div class="m"><span>${MES[j]}</span><div class="track"><div class="fill ${v==null?'':st(v,i.m)}" style="width:${(v||0)*100}%"></div><div class="meta" style="left:${i.m*100}%"></div></div><span class="val">${pct(v)}</span></div>`}).join('');
+  const s=st(i.acc,i.m);
+  return `<div class="ind-row"><div class="name">${i.n}${i.s?`<small>${i.s}</small>`:''}</div><div class="months">${cells}</div><div><span class="pill ${s}">${pct(i.acc)} acum.</span></div></div>`}).join('');
+
+// Stacked columns
+const mx=62;
+$('cols').innerHTML=SAL.map((r,k)=>{
+  const h=r[0]/mx*150;
+  const parts=k==0?`<div class="s-nd" style="height:${h}px">${r[0]}</div>`:
+   `<div class="s-bad" style="height:${r[2]/r[0]*h}px">${r[2]}</div><div class="s-ok" style="height:${r[1]/r[0]*h}px">${r[1]}</div>`;
+  return `<div class="col"><div class="tot">${r[0]} salidas</div><div class="stack" style="height:${Math.max(h,18)}px">${parts}</div><div class="lbl">${['Julio','Agosto','Septiembre','Octubre'][k]}</div></div>`}).join('');
+
+// Falls
+const falls=[['Falta foto',59,95],['Falta doble firma',17,95],['Sistema incorrecto',8,157]];
+$('falls').innerHTML=falls.map(f=>`<div class="m" style="gap:5px"><div style="display:flex;justify-content:space-between"><span style="color:var(--fg);font-weight:500">${f[0]}</span><span class="val">${f[1]} <span style="color:var(--muted);font-weight:400">de ${f[2]}</span></span></div><div class="track"><div class="fill bad" style="width:${f[1]/f[2]*100}%"></div></div></div>`).join('');
+
+// Table
+let view='R',sortK=4,sortD=-1;
+const H=['Salidas','Evaluadas','Cumplen','No cumplen','% cumpl.','Sin firma','Sin foto','Sist. incorr.'];
+function render(){
+  const data=(view=='R'?RESP:BOD).map(r=>({r,p:r[2]?r[3]/r[2]:null}));
+  const q=$('q').value.toLowerCase(),f=$('f').value;
+  let rows=data.filter(d=>d.r[0].toLowerCase().includes(q)&&(f=='all'||(f=='bad'&&d.r[4]>0)||(f=='zero'&&d.p===0)));
+  const key=d=>sortK==99?(d.p==null?2:d.p):(sortK==0?d.r[0]:d.r[sortK]);
+  rows.sort((a,b)=>{const x=key(a),y=key(b);return (x>y?1:x<y?-1:0)*sortD});
+  const th=['Código de empleado',...H].map((h,i)=>{const k=i==5?99:(i<5?(i==0?0:i):i-1);return `<th data-k="${i==5?99:(i<5?i:i-1)}" class="${i==0?'l':''}">${h}${(sortK==(i==5?99:(i<5?i:i-1)))?(sortD<0?' ↓':' ↑'):''}</th>`}).join('');
+  const body=rows.map(({r,p})=>{
+    const s=p==null?'':st(p,.9);
+    return `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td><div class="pc"><div class="track"><div class="fill ${s}" style="width:${(p||0)*100}%"></div></div>${pct(p)}</div></td><td>${r[5]}</td><td>${r[6]}</td><td>${r[7]}</td></tr>`}).join('');
+  const t=view=='R'?TOT.R:TOT.R;
+  $('tb').innerHTML=`<tr>${th}</tr>${body}<tr class="total"><td>Total</td><td>157</td><td>95</td><td>35</td><td>60</td><td>36.8%</td><td>17</td><td>59</td><td>8</td></tr>`;
+  $('tnote').textContent=(view=='R'?'Responsable de entrega':'Bodeguero que recibe')+': '+rows.length+' registros. Evaluadas = salidas desde el 1 de agosto. Clic en un encabezado para ordenar.';
+}
+document.addEventListener('click',e=>{const t=e.target.closest('th[data-k]');if(t){const k=+t.dataset.k;if(sortK==k)sortD*=-1;else{sortK=k;sortD=k==0?1:-1}render()}});
+$('tR').onclick=()=>{view='R';$('tR').setAttribute('aria-pressed',true);$('tB').setAttribute('aria-pressed',false);render()};
+$('tB').onclick=()=>{view='B';$('tB').setAttribute('aria-pressed',true);$('tR').setAttribute('aria-pressed',false);render()};
+$('q').oninput=render;$('f').onchange=render;
+render();
+</script>
+</body></html>
